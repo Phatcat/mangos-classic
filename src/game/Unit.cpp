@@ -341,6 +341,12 @@ bool Unit::UpdateMeleeAttackingState()
     if (!victim || IsNonMeleeSpellCasted(false))
         return false;
 
+    if (GetTypeId() != TYPEID_PLAYER && (!((Creature*)this)->CanInitiateAttack() || !victim->isInAccessablePlaceFor((Creature*)this)))
+        return false;
+ 
+    if (!victim->isTargetableForAttack() || !IsHostileTo(victim))
+        return false;
+ 
     if (!isAttackReady(BASE_ATTACK) && !(isAttackReady(OFF_ATTACK) && haveOffhandWeapon()))
         return false;
 
@@ -2049,6 +2055,13 @@ void Unit::AttackerStateUpdate(Unit* pVictim, WeaponAttackType attType, bool ext
     else
         DEBUG_FILTER_LOG(LOG_FILTER_COMBAT, "AttackerStateUpdate: (NPC)    %u attacked %u (TypeId: %u) for %u dmg, absorbed %u, blocked %u, resisted %u.",
                          GetGUIDLow(), pVictim->GetGUIDLow(), pVictim->GetTypeId(), damageInfo.damage, damageInfo.absorb, damageInfo.blocked_amount, damageInfo.resist);
+
+    if (Unit* owner = GetOwner())
+    {
+        owner->AddThreat(pVictim);
+        owner->SetInCombatWith(pVictim);
+        pVictim->SetInCombatWith(owner);
+    }
 
     // if damage pVictim call AI reaction
     pVictim->AttackedBy(this);
@@ -8397,6 +8410,9 @@ void Unit::SetFeared(bool apply, ObjectGuid casterGuid, uint32 spellID, uint32 t
         Unit* caster = IsInWorld() ?  GetMap()->GetUnit(casterGuid) : nullptr;
 
         GetMotionMaster()->MoveFleeing(caster, time);       // caster==nullptr processed in MoveFleeing
+
+        if (caster)
+            AttackedBy(caster);
     }
     else
     {
@@ -8408,10 +8424,10 @@ void Unit::SetFeared(bool apply, ObjectGuid casterGuid, uint32 spellID, uint32 t
         {
             Creature* c = ((Creature*)this);
             // restore appropriate movement generator
-            if (getVictim())
+            if (Unit* victim = getVictim())
             {
-                SetTargetGuid(getVictim()->GetObjectGuid());  // restore target
-                GetMotionMaster()->MoveChase(getVictim());
+                SetTargetGuid(victim->GetObjectGuid());  // restore target
+                GetMotionMaster()->MoveChase(victim);
             }
             else
                 GetMotionMaster()->Initialize();
@@ -8435,6 +8451,13 @@ void Unit::SetConfused(bool apply, ObjectGuid casterGuid, uint32 spellID)
         CastStop(GetObjectGuid() == casterGuid ? spellID : 0);
 
         GetMotionMaster()->MoveConfused();
+
+        Unit* caster = IsInWorld() ? GetMap()->GetUnit(casterGuid) : NULL;
+
+        if (caster)
+        {
+            AttackedBy(caster);
+        }
     }
     else
     {
