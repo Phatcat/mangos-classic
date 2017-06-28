@@ -53,7 +53,7 @@ enum
     SPELL_BAT_FORM              = 23966,
 
     // Batriders Spell
-    SPELL_LIQUID_FIRE           = 23968,                    // script effect - triggers 23971,
+    SPELL_LIQUID_FIRE           = 23968,                    // script effect, triggers damage and summon
     SPELL_ROOT_SELF             = 23973,
     SPELL_UNSTABLE_CONCOCTION   = 24024,
     SPELL_THRASH                = 8876,

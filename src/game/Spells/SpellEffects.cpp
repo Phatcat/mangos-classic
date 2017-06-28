@@ -3569,6 +3569,16 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     m_caster->CastSpell(unitTarget, 22682, TRIGGERED_OLD_TRIGGERED);
                     return;
                 }
+                case 23969:                                 // Liquid Fire (Visual + Damage)
+                {
+                    // Should cast spell 23970 from somewhere on someone/somewhere
+                    return;
+                }
+                case 23970:                                 // Liquid Fire (Summon)
+                {
+                    // Should cast spell 23971 from somewhere
+                    return;
+                }
                 case 24194:                                 // Uther's Tribute
                 case 24195:                                 // Grom's Tribute
                 {
