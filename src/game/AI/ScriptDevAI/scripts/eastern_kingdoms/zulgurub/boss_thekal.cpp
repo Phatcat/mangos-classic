@@ -31,12 +31,12 @@ enum
     SAY_AGGRO               = -1309009,
     SAY_DEATH               = -1309010,
 
+    SPELL_BLOODLUST         = 24185,        // TODO: Implement use in script
     SPELL_MORTAL_CLEAVE     = 22859,
-    SPELL_SILENCE           = 23207,
-    SPELL_FRENZY            = 23128,
+    SPELL_SILENCE           = 22666,
     SPELL_FORCE_PUNCH       = 24189,
-    SPELL_CHARGE            = 24408,
-    SPELL_ENRAGE            = 23537,
+    SPELL_CHARGE            = 24193,
+    SPELL_ENRAGE            = 8269,
     SPELL_SUMMON_TIGERS     = 24183,
     SPELL_TIGER_FORM        = 24169,
     SPELL_RESURRECT         = 24173,
@@ -151,7 +151,6 @@ struct boss_thekalAI : public boss_thekalBaseAI
 
     uint32 m_uiMortalCleaveTimer;
     uint32 m_uiSilenceTimer;
-    uint32 m_uiFrenzyTimer;
     uint32 m_uiForcePunchTimer;
     uint32 m_uiChargeTimer;
     uint32 m_uiEnrageTimer;
@@ -164,7 +163,6 @@ struct boss_thekalAI : public boss_thekalBaseAI
     {
         m_uiMortalCleaveTimer   = 4000;
         m_uiSilenceTimer        = 9000;
-        m_uiFrenzyTimer         = 30000;
         m_uiForcePunchTimer     = 4000;
         m_uiChargeTimer         = 12000;
         m_uiEnrageTimer         = 32000;
@@ -229,13 +227,13 @@ struct boss_thekalAI : public boss_thekalBaseAI
 
     void OnFakeingDeath()
     {
-        m_uiResurrectTimer = 10000;
+        m_uiResurrectTimer = 7000;
 
         if (m_pInstance)
         {
             m_pInstance->SetData(TYPE_THEKAL, SPECIAL);
 
-            // If both Adds are already dead, don't wait 10 seconds
+            // If both Adds are already dead, don't wait 7 seconds
             if (CanPreventAddsResurrect())
                 m_uiResurrectTimer = 1000;
         }
@@ -318,14 +316,6 @@ struct boss_thekalAI : public boss_thekalBaseAI
                 else
                     m_uiChargeTimer -= uiDiff;
 
-                if (m_uiFrenzyTimer < uiDiff)
-                {
-                    if (DoCastSpellIfCan(m_creature, SPELL_FRENZY) == CAST_OK)
-                        m_uiFrenzyTimer = 30000;
-                }
-                else
-                    m_uiFrenzyTimer -= uiDiff;
-
                 if (m_uiForcePunchTimer < uiDiff)
                 {
                     if (DoCastSpellIfCan(m_creature, SPELL_FORCE_PUNCH) == CAST_OK)
@@ -397,7 +387,7 @@ struct mob_zealot_lorkhanAI : public boss_thekalBaseAI
 
     void OnFakeingDeath()
     {
-        m_uiResurrectTimer = 10000;
+        m_uiResurrectTimer = 7000;
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_LORKHAN, SPECIAL);
@@ -550,7 +540,7 @@ struct mob_zealot_zathAI : public boss_thekalBaseAI
 
     void OnFakeingDeath()
     {
-        m_uiResurrectTimer = 10000;
+        m_uiResurrectTimer = 7000;
 
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ZATH, SPECIAL);
