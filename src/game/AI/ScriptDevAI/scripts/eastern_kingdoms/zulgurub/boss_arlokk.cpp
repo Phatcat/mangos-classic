@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Arlokk
-SD%Complete: 80
-SDComment: Vanish spell is replaced by workaround; Timers
+SD%Complete: 90
+SDComment: Missing 'zzzzz' from the prowlers who just 'woke up'
 SDCategory: Zul'Gurub
 EndScriptData
 
@@ -34,18 +34,19 @@ EndContentData */
 
 enum
 {
-    SAY_AGGRO                   = -1309011,
-    SAY_FEAST_PANTHER           = -1309012,
-    SAY_DEATH                   = -1309013,
+    SAY_AGGRO                    = -1309011,
+    SAY_FEAST_PANTHER            = -1309012,
+    SAY_DEATH                    = -1309013,
 
-    SPELL_SHADOW_WORD_PAIN      = 23952,
-    SPELL_GOUGE                 = 24698,
-    SPELL_MARK_ARLOKK           = 24210,
-    SPELL_RAVAGE                = 24213,
-    SPELL_TRASH                 = 3391,
-    SPELL_WHIRLWIND             = 24236,
-    SPELL_PANTHER_TRANSFORM     = 24190,
+    SPELL_PANTHER_TRANSFORM      = 24190,
+    SPELL_MARK_ARLOKK            = 24210,
+    SPELL_SHADOW_WORD_PAIN       = 24212,
+    SPELL_RAVAGE                 = 24213,
+    SPELL_VANISH                 = 24222,
+    SPELL_SUPER_INVIS            = 24235,
+    SPELL_WHIRLWIND              = 24236,
     SPELL_SUMMON_ZULIAN_PROWLERS = 24247,
+    SPELL_GOUGE                  = 24698,
 
     SPELL_SNEAK                  = 22766,
 };
@@ -80,20 +81,15 @@ struct boss_arlokkAI : public ScriptedAI
     void Reset() override
     {
         m_uiShadowWordPainTimer = 8000;
-        m_uiGougeTimer      = 14000;
-        m_uiMarkTimer       = 5000;
-        m_uiRavageTimer     = 12000;
-        m_uiTrashTimer      = 20000;
-        m_uiWhirlwindTimer  = 15000;
-        m_uiTransformTimer  = 30000;
-        m_uiVanishTimer     = 5000;
-        m_uiVisibleTimer    = 0;
+        m_uiGougeTimer          = 14000;
+        m_uiMarkTimer           = 5000;
+        m_uiRavageTimer         = 12000;
+        m_uiWhirlwindTimer      = 15000;
+        m_uiTransformTimer      = 30000;
+        m_uiVanishTimer         = 5000;
+        m_uiVisibleTimer        = 0;
 
         m_bIsPhaseTwo = false;
-
-        // Restore visibility
-        if (m_creature->GetVisibility() != VISIBILITY_ON)
-            m_creature->SetVisibility(VISIBILITY_ON);
     }
 
     void Aggro(Unit* /*pWho*/) override
@@ -110,6 +106,8 @@ struct boss_arlokkAI : public ScriptedAI
         if (m_pInstance)
             m_pInstance->SetData(TYPE_ARLOKK, FAIL);
 
+        m_creature->RemoveAurasDueToSpell(SPELL_SUPER_INVIS);
+
         // we should be summoned, so despawn
         m_creature->ForcedDespawn();
 
@@ -118,10 +116,9 @@ struct boss_arlokkAI : public ScriptedAI
 
     void JustDied(Unit* /*pKiller*/) override
     {
+        m_creature->RemoveAurasDueToSpell(SPELL_SUPER_INVIS);
+
         DoScriptText(SAY_DEATH, m_creature);
-        // Restore visibility in case of killed by dots
-        if (m_creature->GetVisibility() != VISIBILITY_ON)
-            m_creature->SetVisibility(VISIBILITY_ON);
 
         DoStopZulianProwlers();
 
@@ -151,11 +148,10 @@ struct boss_arlokkAI : public ScriptedAI
         {
             if (m_uiVisibleTimer <= uiDiff)
             {
-                // Restore visibility
-                m_creature->SetVisibility(VISIBILITY_ON);
-
                 if (Unit* pTarget = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0))
                     AttackStart(pTarget);
+
+                m_creature->RemoveAurasDueToSpell(SPELL_SUPER_INVIS);
 
                 m_uiVisibleTimer = 0;
             }
@@ -212,6 +208,7 @@ struct boss_arlokkAI : public ScriptedAI
             {
                 if (DoCastSpellIfCan(m_creature, SPELL_PANTHER_TRANSFORM) == CAST_OK)
                 {
+                    DoCastSpellIfCan(m_creature, SPELL_THRASH);
                     m_uiTransformTimer = 80000;
                     m_bIsPhaseTwo = true;
                 }
@@ -230,14 +227,6 @@ struct boss_arlokkAI : public ScriptedAI
             else
                 m_uiRavageTimer -= uiDiff;
 
-            if (m_uiTrashTimer < uiDiff)
-            {
-                if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_TRASH) == CAST_OK)
-                    m_uiTrashTimer = urand(13000, 15000);
-            }
-            else
-                m_uiTrashTimer -= uiDiff;
-
             if (m_uiWhirlwindTimer < uiDiff)
             {
                 if (DoCastSpellIfCan(m_creature, SPELL_WHIRLWIND) == CAST_OK)
@@ -248,12 +237,11 @@ struct boss_arlokkAI : public ScriptedAI
 
             if (m_uiVanishTimer < uiDiff)
             {
-                // Note: this is a workaround because we do not know the real vanish spell
-                m_creature->SetVisibility(VISIBILITY_OFF);
-                DoResetThreat();
-
-                m_uiVanishTimer = 85000;
-                m_uiVisibleTimer = 45000;
+                if (DoCastSpellIfCan(m_creature, SPELL_VANISH))
+                {
+                    m_uiVanishTimer = 85000;
+                    m_uiVisibleTimer = 45000;
+                }
             }
             else
                 m_uiVanishTimer -= uiDiff;
@@ -262,6 +250,7 @@ struct boss_arlokkAI : public ScriptedAI
             if (m_uiTransformTimer < uiDiff)
             {
                 m_creature->RemoveAurasDueToSpell(SPELL_PANTHER_TRANSFORM);
+                m_creature->RemoveAurasDueToSpell(SPELL_THRASH);
                 m_uiTransformTimer = 30000;
                 m_bIsPhaseTwo = false;
             }

@@ -891,6 +891,25 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                case 24222:                                 // Vanish Visual (Arlokk)
+                {
+                    // Cast Vanish spell with bulk of effects;
+                    m_caster->CastSpell(m_caster, 24223, TRIGGERED_OLD_TRIGGERED);
+                }
+                case 24223:                                 // Vanish (Arlokk)
+                {
+                    // Handle invisibility and remove threat via dummy;
+                    m_caster->CastSpell(m_caster, 24699, TRIGGERED_OLD_TRIGGERED);
+
+                    return;
+                }
+                case 24699:                                 // Vanish (Arlokk) - Cast on all enemies in area
+                {
+                    // Handle remove threat;
+                    if (unitTarget)
+                        if (m_caster->getThreatManager().getThreat(unitTarget))
+                            m_caster->getThreatManager().modifyThreatPercent(unitTarget, -100);
+                }
                 case 24781:                                 // Dream Fog
                 {
                     // TODO Note: Should actually not only AttackStart, but fixate on the target
@@ -3603,6 +3622,15 @@ void Spell::EffectScriptEffect(SpellEffectIndex eff_idx)
                     if (spellId)
                         m_caster->CastSpell(m_caster, spellId, TRIGGERED_OLD_TRIGGERED);
 
+                    return;
+                }
+                case 24223:                                 // Vanish (Arlokk)
+                {
+                    // This script effect needs a bit of work to handle Arlokk being passive and not attacking anyone
+                    // instead of us handling that directly in the script.
+             
+                    // Cast super invis
+                    m_caster->CastSpell(m_caster, 24235, TRIGGERED_OLD_TRIGGERED);
                     return;
                 }
                 case 24320:                                 // Poisonous Blood
