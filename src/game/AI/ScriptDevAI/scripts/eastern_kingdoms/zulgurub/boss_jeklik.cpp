@@ -54,6 +54,7 @@ enum
 
     // Batriders Spell
     SPELL_LIQUID_FIRE           = 23968,                    // script effect - triggers 23971,
+    SPELL_ROOT_SELF             = 23973,
     SPELL_UNSTABLE_CONCOCTION   = 24024,
     SPELL_THRASH                = 8876,
     SPELL_DEMORALIZING_SHOUT    = 23511,
@@ -317,17 +318,21 @@ struct npc_gurubashi_bat_riderAI : public ScriptedAI
     bool m_bIsSummon;
     bool m_bHasDoneConcoction;
 
+    uint32 m_uiDemoralizingShoutTimer;
     uint32 m_uiInfectedBiteTimer;
     uint32 m_uiBattleCommandTimer;
 
     void Reset() override
     {
+        m_uiDemoralizingShoutTimer = 0;
         m_uiInfectedBiteTimer = 6500;
         m_uiBattleCommandTimer = 8000;
 
         m_bHasDoneConcoction = false;
 
-        DoCastSpellIfCan(m_creature, SPELL_THRASH);
+        // For normal mobs flag needs to be removed
+        if (!m_bIsSummon)
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
     void Aggro(Unit* /*pWho*/) override
@@ -336,9 +341,7 @@ struct npc_gurubashi_bat_riderAI : public ScriptedAI
         if (m_bIsSummon)
             return;
 
-        DoCastSpellIfCan(m_creature, SPELL_DEMORALIZING_SHOUT);
-        // For normal mobs flag needs to be removed
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        DoCastSpellIfCan(m_creature, SPELL_THRASH);
     }
 
     void AttackStart(Unit* pWho) override
@@ -364,14 +367,34 @@ struct npc_gurubashi_bat_riderAI : public ScriptedAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
+        // Can get aggro from throwing Liquid Fire
+        if (m_bIsSummon && m_creature->getVictim())
+        {
+            m_creature->AttackStop(true);
+            return;
+        }
+
         if (!m_bHasDoneConcoction && m_creature->GetHealthPercent() < 40.0f)
         {
-            if (DoCastSpellIfCan(m_creature, SPELL_UNSTABLE_CONCOCTION) == CAST_OK)
+            // Root in place so can't be moved through fear or otherwise
+            if (DoCastSpellIfCan(m_creature, SPELL_ROOT_SELF) == CAST_OK)
             {
+                DoCastSpellIfCan(m_creature, SPELL_UNSTABLE_CONCOCTION);
                 DoScriptText(SAY_SELF_DETONATE, m_creature);
                 m_bHasDoneConcoction = true;
+
+                return;
             }
         }
+
+        if (m_uiDemoralizingShoutTimer < uiDiff)
+        {
+            if (!m_creature->getVictim()->HasAura(SPELL_DEMORALIZING_SHOUT))
+                if (DoCastSpellIfCan(m_creature->getVictim(), SPELL_DEMORALIZING_SHOUT))
+                    m_uiDemoralizingShoutTimer = 10000;
+        }
+        else
+            m_uiDemoralizingShoutTimer -= uiDiff;
 
         if (m_uiInfectedBiteTimer < uiDiff)
         {
