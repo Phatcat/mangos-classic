@@ -566,6 +566,10 @@ class World
 
         static TimePoint GetCurrentClockTime() { return m_currentTime; }
 
+        void setWorldState(uint32 index, uint32 value);
+        uint32 getWorldState(uint32 index) const;
+        void LoadWorldStates();
+
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -644,6 +648,10 @@ class World
 
         std::mutex m_sessionAddQueueLock;
         std::deque<WorldSession*> m_sessionAddQueue;
+
+        // World States
+        typedef std::map<uint32, uint32> WorldStatesMap;
+        WorldStatesMap m_worldstates;
 
         // used versions
         std::string m_DBVersion;
