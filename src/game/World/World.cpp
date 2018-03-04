@@ -1126,6 +1126,9 @@ void World::SetInitialWorldSettings()
     sLog.outString("Loading Waypoints...");
     sWaypointMgr.Load();
 
+    sLog.outString("Loading World States...");              // must be loaded before battleground, outdoor PvP and conditions
+    loadWorldStates();
+
     sLog.outString("Loading ReservedNames...");
     sObjectMgr.LoadReservedPlayersNames();
 
@@ -2188,4 +2191,51 @@ void World::InvalidatePlayerDataToAllClient(ObjectGuid guid) const
     WorldPacket data(SMSG_INVALIDATE_PLAYER, 8);
     data << guid;
     SendGlobalMessage(data);
+}
+
+// Setting a worldstate will save it to DB
+void World::setWorldState(uint32 index, uint32 value)
+{
+    WorldStatesMap::const_iterator it = m_worldstates.find(index);
+    if (it != m_worldstates.end())
+    {
+        if (it->second == value)
+            return;
+
+        CharacterDatabase.PExecute("UPDATE worldstates SET value = '" UI64FMTD "' WHERE entry = '%u'", value, index);
+    }
+    else
+        CharacterDatabase.PExecute("INSERT INTO worldstates VALUES ('%u', '" UI64FMTD "')", index, value);
+
+    m_worldstates[index] = value;
+}
+
+uint32 World::getWorldState(uint32 index) const
+{
+    WorldStatesMap::const_iterator it = m_worldstates.find(index);
+    return it != m_worldstates.end() ? it->second : 0;
+}
+
+void World::loadWorldStates()
+{
+    QueryResult* result = CharacterDatabase.PQuery("SELECT entry, value FROM worldstates");
+
+    if (!result)
+    {
+        sLog.outError(">> Loaded 0 world states. DB table `worldstates` is empty!");
+
+        return;
+    }
+
+    uint32 count = 0;
+
+    do
+    {
+        Field* fields = result->Fetch();
+        m_worldstates[fields[0].GetUInt32()] = fields[1].GetUInt32();
+        ++count;
+    }
+    while (result->NextRow());
+
+    sLog.outError(">> Loaded %u world states", count);
 }
