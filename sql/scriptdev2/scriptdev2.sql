@@ -435,6 +435,22 @@ INSERT INTO scripted_event_id VALUES
 (5622,'event_spell_gandling_shadow_portal'),
 (5623,'event_spell_gandling_shadow_portal');
 
+/* SCOURGE INVASION */
+UPDATE creature_template SET ScriptName='boss_revanchion' WHERE entry=14690;
+UPDATE creature_template SET ScriptName='boss_lord_blackwood' WHERE entry=14695;
+UPDATE creature_template SET ScriptName='npc_damaged_shard' WHERE entry=16172;
+UPDATE creature_template SET ScriptName='npc_cultist_engineer' WHERE entry=16230;
+UPDATE creature_template SET ScriptName='npc_necropolis' WHERE entry=16401;
+UPDATE creature_template SET ScriptName='npc_necropolis_controller' WHERE entry=16214;
+UPDATE creature_template SET ScriptName='npc_necrotic_shard' WHERE entry=16136;
+UPDATE creature_template SET ScriptName='npc_scourge_minion' WHERE entry IN (16422, 16423, 16437, 16438, 14697, 16141, 16299, 16380, 16379, 16422, 16143, 16298);
+UPDATE creature_template SET ScriptName='npc_scourge_rewards' WHERE entry IN (16395, 16433, 16434, 16435, 16436, 16384);
+UPDATE creature_template SET ScriptName='npc_scourge_emissary' WHERE entry=16285;
+UPDATE creature_template SET ScriptName='npc_scourge_messenger' WHERE entry=16359;
+UPDATE creature_template SET ScriptName='npc_pallid_horror' WHERE entry=16394;
+UPDATE creature_template SET ScriptName='npc_patchwork_terror' WHERE entry=16382;
+UPDATE creature_template SET ScriptName='npc_flameshocker' WHERE entry=16383;
+
 /* SEARING GORGE */
 UPDATE creature_template SET ScriptName='npc_dorius_stonetender' WHERE entry=8284;
 
@@ -2443,6 +2459,38 @@ INSERT INTO script_texts (entry,content_default,sound,type,language,emote,commen
 (-1533157,'%s casts Condemation on everyone!',0,3,0,0,'sir_zeliek EMOTE_CONDEMATION'),
 
 (-1533158,'%s injects you with a mutagen!',0,5,0,0,'grobbulus EMOTE_INJECTION');
+
+
+-- -1 534 000 SCOURGE INVASION
+INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES
+
+(-1534010, 'Help! The Scourge are attacking the Park!', '0', '6', '0', '0', 'Cities Invader in Park'),
+(-1534011, 'Help! The Scourge are attacking the Mage Quarter!', '0', '6', '0', '0', 'Cities Invader in Mage Quarters'),
+(-1534012, 'Help! The Scourge are attacking the Cathedral Square!', '0', '6', '0', '0', 'Cities Invader in Cathedral Squar'),
+(-1534013, 'Help! The Scourge are attacking the Trade District!', '0', '6', '0', '0', 'Cities Invader in Trade District'),
+(-1534014, 'Help! The Scourge are attacking the Dwarven District!', '0', '6', '0', '0', 'Cities Invader in Dwarfen District'),
+(-1534015, 'Help! The Scourge are attacking the Old Town!', '0', '6', '0', '0', 'Cities Invader in Old Town'),
+(-1534016, 'The Scourge have reached Stormwind Keep!', '0', '6', '0', '0', 'Cities Invader in Stormwind Keep'),
+(-1534017, 'Do not let them through! Protect the King at all costs!', '0', '6', '0', '0', 'Cities Invader in Stormwind Keep Bolvar'),
+(-1534018, 'Help! The Scourge are attacking the Trade Quarter!', '0', '6', '0', '0', 'Cities Invader in Trade Quarter'),
+(-1534019, 'Help! The Scourge are attacking the War Quarter!', '0', '6', '0', '0', 'Cities Invader in War Quarter'),
+(-1534020, 'Help! The Scourge are attacking the Apothecarium!', '0', '6', '0', '0', 'Cities Invader in Apothecarium'),
+(-1534021, 'Help! The Scourge are attacking the Rogues Quarter!', '0', '6', '0', '0', 'Cities Invader in Roques Quarter'),
+(-1534022, 'Help! The Scourge are attacking the Magic Quarter!', '0', '6', '0', '0', 'Cities Invader in Magic Quarter'),
+(-1534023, 'The Scourge have reached the Royal Quarter!', '0', '6', '0', '0', 'Cities Invader in Royal Quarter'),
+(-1534024, 'Do not let them through! Protect the Queen at all costs!', '0', '6', '0', '0', 'Cities Invader in Royal Quarter Protect Queen'),
+(-1534025, 'The Scourge attack against my court has been eliminated. You may go about your business.', '0', '6', '0', '0', 'Cities Invader - Died in Royal Quarters.'),
+(-1534026, 'The Scourge attack against the keep has been eradicated. Please, return to your duties.', '0', '6', '0', '0', 'Cities Invader - Died in Stormwind Keep'),
+
+(-1534051,'The Scourge infestation grows in Azshara. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Azshara invaded'),
+(-1534052,'The Scourge infestation grows in Blasted Lands. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Blasted Lands invaded'),
+(-1534053,'The Scourge infestation grows in Burning Steppes. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Burning Steppes invaded'),
+(-1534054,'The Scourge infestation grows in Tanaris Desert. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Tanaris invaded'),
+(-1534055,'The Scourge infestation grows in Eastern Plaguelands. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Eastern Plaguelands invaded'),
+(-1534056,'The Scourge infestation grows in Winterspring. Everyone capable of fighting is needed there to stop them before it is too late.',0,6,0,22,'Argent Messenger yells Winterspring invaded'),
+(-1534057,'No worry, we find you!', '0', '6', '0', '0', 'Cities Invader yell 1'),
+(-1534058,'The Lich King say to tell you... DIE!', '0', '6', '0', '0', 'Cities Invader yell 2');
+
 
 -- -1 999 900 EXAMPLE TEXT
 INSERT INTO script_texts (entry,content_default,sound,type,language,emote,comment) VALUES

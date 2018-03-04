@@ -25,6 +25,7 @@ EndScriptData
 
 #include "AI/ScriptDevAI/PreCompiledHeader.h"
 #include "world_map_scripts.h"
+#include "../game/AI/ScriptDevAI/scripts/world/scourge_invasion/scourge_invasion_mgr.h"
 
 /* *********************************************************
  *                  EASTERN KINGDOMS
@@ -37,12 +38,57 @@ struct world_map_eastern_kingdoms : public ScriptedMap
     {
         switch (pCreature->GetEntry())
         {
+            case NPC_AD_INITIATE:
+            case NPC_AD_PALADIN:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_1)
+                    pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
+            case NPC_AD_CLERIC:
+            case NPC_AD_CRUSADER:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_2)
+                    pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
+            case NPC_AD_PRIEST:
+            case NPC_AD_CHAMPION:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_3)
+                    pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
             case NPC_JONATHAN:
             case NPC_WRYNN:
             case NPC_BOLVAR:
             case NPC_PRESTOR:
             case NPC_WINDSOR:
                 m_npcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetObjectGuid();
+                break;
+        }
+    }
+
+    void OnObjectCreate(GameObject* pGo) override
+    {
+        switch (pGo->GetEntry())
+        {
+            case GO_CIRCLE:
+            case GO_UNDEAD_FIRE:
+            case GO_UNDEAD_FIRE_AURA:
+                switch (pGo->GetZoneId())
+                {
+                    case ZONE_ELWYNN:
+                    case ZONE_MULGORE:
+                    case ZONE_DUN_MOROGH:
+                    case ZONE_TIRISFAL_GLADES:
+                    case ZONE_DUROTAR:
+                    case ZONE_TELDRASSIL:
+                    return;
+                }
+            case GO_NECROPOLIS:
+                pGo->SetVisibility(false);
+                pGo->UpdateObjectVisibility();
                 break;
         }
     }
@@ -92,6 +138,27 @@ struct world_map_kalimdor : public ScriptedMap
     {
         switch (pCreature->GetEntry())
         {
+            case NPC_AD_INITIATE:
+            case NPC_AD_PALADIN:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_1)
+					pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
+            case NPC_AD_CLERIC:
+            case NPC_AD_CRUSADER:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_2)
+					pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
+            case NPC_AD_PRIEST:
+            case NPC_AD_CHAMPION:
+            {
+                if (sScourgeInvasionMgr.GetDeadNecropolisCount() < REWARD_STAGE_3)
+					pCreature->SetVisibility(VISIBILITY_OFF);
+                return;
+            }
             case NPC_MURKDEEP:
             case NPC_OMEN:
                 m_npcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetObjectGuid();
@@ -163,6 +230,23 @@ struct world_map_kalimdor : public ScriptedMap
     {
         switch (pGo->GetEntry())
         {
+            case GO_CIRCLE:
+            case GO_UNDEAD_FIRE:
+            case GO_UNDEAD_FIRE_AURA:
+                switch (pGo->GetZoneId())
+                {
+                    case ZONE_ELWYNN:
+                    case ZONE_MULGORE:
+                    case ZONE_DUN_MOROGH:
+                    case ZONE_TIRISFAL_GLADES:
+                    case ZONE_DUROTAR:
+                    case ZONE_TELDRASSIL:
+                    return;
+                }
+            case GO_NECROPOLIS:
+                pGo->SetVisibility(false);
+                pGo->UpdateObjectVisibility();
+                break;
             case GO_GHOST_MAGNET:
                 m_vGOEvents.push_back({ pGo->GetObjectGuid(), 0, 0 }); // insert new event with 0 timer
                 pGo->SetActiveObjectState(true);
