@@ -24,6 +24,7 @@ EndScriptData */
 #include "../game/AI/ScriptDevAI/scripts/world/scourge_invasion/scourge_invasion_mgr.h"
 #include "../game/AI/ScriptDevAI/scripts/world/scourge_invasion/scourge_invasion.h"
 #include "../game/AI/ScriptDevAI/PreCompiledHeader.h"
+#include "../game/AI/ScriptDevAI/base/escort_ai.h""
 #include "../game/Grids/GridNotifiers.h"
 #include "../game/Grids/CellImpl.h"
 #include "../game/Grids/GridNotifiersImpl.h"
@@ -50,7 +51,8 @@ struct npc_flameshockerAI : public ScriptedAI
 
     void JustRespawned() override { Reset(); }
 
-    bool IsTargetInvalid(Unit const* target) { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
+//    Need to see if this can be handled in with their faction.
+//    bool IsTargetInvalid(Unit const* target) { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
 
     void KilledUnit(Unit* victim) override
     {
@@ -91,7 +93,7 @@ struct npc_flameshockerAI : public ScriptedAI
 ######*/
 
 
-struct npc_pallid_horrorAI : public EscortAI
+struct npc_pallid_horrorAI : public npc_escortAI
 {
     uint8 m_fleeingPhasesCounter;
 
@@ -104,7 +106,7 @@ struct npc_pallid_horrorAI : public EscortAI
     std::list<Escort_Waypoint> const* m_waypoints;
     std::vector<int32> m_invadedCityAreas;
 
-    npc_pallid_horrorAI(Creature* pCreature) : EscortAI(pCreature)
+    npc_pallid_horrorAI(Creature* pCreature) : npc_escortAI(pCreature)
     {
         m_uiSpiritAuraTimer = 1000;
         m_uiCheckInvadedCityAreaTimer = 5000;
@@ -146,7 +148,7 @@ struct npc_pallid_horrorAI : public EscortAI
             SetCurrentWaypoint(GetCurrentWaypoint() + 1);
         }
 
-        EscortAI::EnterEvadeMode();
+        npc_escortAI::EnterEvadeMode();
 
         if (m_fleeingPhase && !m_creature->HasAura(SPELL_RUNNING_SPEED))
         {
@@ -170,9 +172,10 @@ struct npc_pallid_horrorAI : public EscortAI
             EndFleeing();
     }
 
-    bool IsTargetInvalid(Unit const* target) override { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
+//    Need to see if this can be handled in with their faction.
+//    bool IsTargetInvalid(Unit const* target) { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
 
-    void KilledUnit(Unit* victim, SpellInfo const* /*spellInfo*/) override
+    void KilledUnit(Unit* victim) override
     {
         uint32 victimEntry = victim->GetEntry();
 
@@ -341,7 +344,7 @@ struct npc_pallid_horrorAI : public EscortAI
 
     void SummonFlameshockers(uint8 amount)
     {
-        if (!m_creature->IsAlive())
+        if (!m_creature->isAlive())
             return;
 
         for (uint8 i = 0; i < amount; ++i)
@@ -359,7 +362,7 @@ struct npc_pallid_horrorAI : public EscortAI
 ## Entry: 16382
 ######*/
 
-struct npc_patchwork_terrorAI : public EscortAI
+struct npc_patchwork_terrorAI : public npc_escortAI
 {
     int32 m_stormwindKeepX = -8439;
     int32 m_royalQuarterX = 1298;
@@ -368,7 +371,7 @@ struct npc_patchwork_terrorAI : public EscortAI
     std::list<Escort_Waypoint> const* m_waypoints;
     std::vector<int32> m_invadedCityAreas;
 
-    npc_patchwork_terrorAI(Creature* pCreature) : EscortAI(pCreature)
+    npc_patchwork_terrorAI(Creature* pCreature) : npc_escortAI(pCreature)
     {
         m_uiCheckInvadedCityAreaTimer = 5000;
 
@@ -399,9 +402,10 @@ struct npc_patchwork_terrorAI : public EscortAI
         m_uiFearTimer = urand(5000, 12000);
     }
 
-    bool IsTargetInvalid(Unit const* target) override { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
+//    Need to see if this can be handled in with their faction.
+//    bool IsTargetInvalid(Unit const* target) { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
 
-    void KilledUnit(Unit* victim, SpellInfo const* /*spellInfo*/) override
+    void KilledUnit(Unit* victim) override
     {
         uint32 victimEntry = victim->GetEntry();
         if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
@@ -447,7 +451,7 @@ struct npc_patchwork_terrorAI : public EscortAI
             m_uiCheckInvadedCityAreaTimer = 5000;
         }
         else
-            m_uiCheckInvadedCityAreaTimer -= diff;
+            m_uiCheckInvadedCityAreaTimer -= uiDiff;
 
         // Check if we have a valid target, otherwise do nothing
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -483,9 +487,9 @@ struct npc_patchwork_terrorAI : public EscortAI
 
         if (m_uiThrowAxeTimer < uiDiff)
         {
-            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, SPELL_THROW_AXE))
-                if (DoCastSpellIfCan(target, SPELL_THROW_AXE) == CAST_OK)
-                    m_uiThrowAxeTimer = urand(18000, 32000)
+			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, SPELL_THROW_AXE))
+				if (DoCastSpellIfCan(target, SPELL_THROW_AXE) == CAST_OK)
+					m_uiThrowAxeTimer = urand(18000, 32000);
         }
         else
             m_uiThrowAxeTimer -= uiDiff;
