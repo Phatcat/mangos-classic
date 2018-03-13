@@ -121,7 +121,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
 
         Reset();
 
-        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
+        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2, m_creature);
 
         m_creature->DelayFor(1 * IN_MILLISECONDS, [](Creature* controller)
         {
@@ -222,19 +222,19 @@ struct npc_pallid_horrorAI : public npc_escortAI
                 if (cityAreaPosX == m_stormwindKeepX)
                 {
                     if (Creature* bolvar = GetClosestCreatureWithEntry(m_creature, NPC_BOLVAR, 100))
-                        bolvar->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], bolvar);
                 }
                 else if (cityAreaPosX == m_royalQuarterX)
                 {
                     if (Creature* varimathras = GetClosestCreatureWithEntry(m_creature, NPC_VARIMATHRAS, 100))
-                        varimathras->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], varimathras);
                 }
                 else
                 {
                     float fx, fy, fz;
                     m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
                     if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
-                        cityGuard->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], cityGuard);
                 }
 
                 m_invadedCityAreas.push_back(cityAreaPosX);
@@ -386,7 +386,7 @@ struct npc_patchwork_terrorAI : public npc_escortAI
 
         Reset();
 
-        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
+        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2, m_creature);
 
         m_creature->DelayFor(1000, [](Creature* controller)
         {
@@ -446,19 +446,19 @@ struct npc_patchwork_terrorAI : public npc_escortAI
                 if (cityAreaPosX == m_stormwindKeepX)
                 {
                     if (Creature* bolvar = GetClosestCreatureWithEntry(m_creature, NPC_BOLVAR, 100))
-                        bolvar->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], bolvar);
                 }
                 else if (cityAreaPosX == m_royalQuarterX)
                 {
                     if (Creature* varimathras = GetClosestCreatureWithEntry(m_creature, NPC_VARIMATHRAS, 100))
-                        varimathras->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], varimathras);
                 }
                 else
                 {
                     float fx, fy, fz;
                     m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
                     if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
-                        cityGuard->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
+                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], cityGuard);
                 }
 
                 m_invadedCityAreas.push_back(cityAreaPosX);
