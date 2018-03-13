@@ -19,7 +19,12 @@
 #ifndef LOCK_H
 #define LOCK_H
 
+#include <shared_mutex>
 #include <mutex>
+
+typedef   std::shared_mutex                     SharedMutex;
+typedef   std::shared_lock<std::shared_mutex>   GuardRead;
+typedef   std::unique_lock<std::shared_mutex>   GuardWrite;
 
 #define GUARD_RETURN(mutex, retval) if (!mutex.try_lock())    \
                                         return retval;        \

@@ -162,10 +162,7 @@ class ScourgeInvasion : public MaNGOS::Singleton<ScourgeInvasion>
 
         std::map<uint32, ZoneInfo> m_zoneInfo;
 
-        typedef std::mutex LOCK_TYPE;
-        typedef std::lock_guard<LOCK_TYPE> LOCK_GUARD;
-
-        mutable LOCK_TYPE m_lock;
+        mutable SharedMutex m_lock;
 };
 
 #define sScourgeInvasionMgr MaNGOS::Singleton<ScourgeInvasion>::Instance()

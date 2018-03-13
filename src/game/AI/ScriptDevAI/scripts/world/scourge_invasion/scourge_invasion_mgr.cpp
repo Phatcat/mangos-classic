@@ -115,7 +115,7 @@ void ScourgeInvasion::FillInitialWorldStates(WorldPacket& data, uint32& count)
 
 void ScourgeInvasion::SendUpdateWorldState(uint32 field, uint32 value)
 {
-    GuardRead guard(HashMapHolder<Player>::GetLock());
+    GuardRead guard(m_lock);
     auto const& players = sObjectAccessor.GetPlayers();
 
     for (auto const& data : players)
