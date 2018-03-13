@@ -52,14 +52,14 @@ struct npc_flameshockerAI : public ScriptedAI
 
     bool IsTargetInvalid(Unit const* target) { return target->IsPlayer() && !target->IsInCombatWith(m_creature); }
 
-    void KilledUnit(Unit* victim, SpellInfo const* /*spellInfo*/) override
+    void KilledUnit(Unit* victim) override
     {
         uint32 victimEntry = victim->GetEntry();
         if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
             m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], victim->GetRandomPoint(*victim, 10), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 300 * IN_MILLISECONDS);
     }
 
-    void JustDied(Unit* /*killer*/, SpellInfo const* /*spellInfo*/) override
+    void JustDied(Unit* /*killer*/) override
     {
         DoCastSpellIfCan(m_creature, SPELL_FLAMESHOCKER_REVENGE, TRIGGERED_FULL_MASK);
     }
@@ -158,13 +158,13 @@ struct npc_pallid_horrorAI : public EscortAI
         SetRun(true);
     }
 
-    void JustDied(Unit* /*killer*/, SpellInfo const* /*spellInfo*/) override
+    void JustDied(Unit* /*killer*/) override
     {
         uint32 questCrystalSpellId = m_creature->GetZoneId() == ZONE_STORMWIND ? SPELL_SUMMON_CRACKED_NECROTIC_CRYSTAL : SPELL_SUMMON_FAINT_NECROTIC_CRYSTAL;
-        DoCastSpellIfCan(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
+        m_creature->AI->DoCastSpellIfCan(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
     }
 
-    void SpellAuraRemoved(AuraRemoveMode /*mode*/, Unit* /*caster*/, SpellInfo const* spell) override
+    void SpellAuraRemoved(AuraRemoveMode /*mode*/, Unit* /*caster*/, SpellEntry const* spell) override
     {
         if (spell->Id == SPELL_RUNNING_SPEED)
             EndFleeing();
@@ -515,7 +515,7 @@ struct npc_patchwork_terrorAI : public EscortAI
 
    void SummonFlameshockers(uint8 amount)
     {
-       if (!m_creature->IsAlive())
+       if (!m_creature->isAlive())
            return;
 
         for (uint8 i = 0; i < amount; ++i)
