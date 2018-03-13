@@ -442,7 +442,7 @@ struct npc_scourge_rewardsAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff) override
     {
-        if (!m_creature->IsVisible())
+        if (!m_creature->GetVisibility() != VISIBILITY_ON)
         {
             if (m_visibilityTimer <= uiDiff)
             {
@@ -471,7 +471,7 @@ struct npc_scourge_rewardsAI : public ScriptedAI
                 }
     
                 if (deadNecros >= requiredAmount)
-                    m_creature->SetVisible(true);
+                    m_creature->SetVisibility(VISIBILITY_ON);
             }
             else
                 m_visibilityTimer -= uiDiff;
@@ -979,11 +979,11 @@ struct npc_necrotic_shardAI : public ScriptedAI
                 return true;
 
             // Ignore player and his companions
-            if (unit->IsCharmerOrOwnerPlayerOrPlayerItself())
+            if (unit->GetBeneficiaryPlayer())
                 return true;
 
             // Ignore spirit healers
-            if (unit->IsSpiritHealer())
+            if (unit->isSpiritHealer())
                 return true;
 
             return false;
@@ -1517,29 +1517,29 @@ struct npc_necropolisAI : public ScriptedAI
 
         if (m_bDoNecroToCamp)
         {
-			if (m_uiNecroToCampVisualTimer < uiDiff)
-			{
-				std::list<Creature*> necroticShards;
-				std::list<Creature*> damagedCrystals;
-				GetInvasionCamps(necroticShards, NPC_NECROTIC_SHARD);
-				GetInvasionCamps(damagedCrystals, NPC_DAMAGED_NECROTIC_SHARD);
+            if (m_uiNecroToCampVisualTimer < uiDiff)
+            {
+                std::list<Creature*> necroticShards;
+                std::list<Creature*> damagedCrystals;
+                GetInvasionCamps(necroticShards, NPC_NECROTIC_SHARD);
+                GetInvasionCamps(damagedCrystals, NPC_DAMAGED_NECROTIC_SHARD);
 
-				for (auto& shard : necroticShards)
-				{
-					if (shard->isAlive())
-						DoCastSpellIfCan(shard, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
-				}
+                for (auto& shard : necroticShards)
+                {
+                    if (shard->isAlive())
+                        DoCastSpellIfCan(shard, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
+                }
 
-				for (auto& crystal : damagedCrystals)
-				{
-					if (crystal->isAlive())
-						DoCastSpellIfCan(crystal, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
-				}
+                for (auto& crystal : damagedCrystals)
+                {
+                    if (crystal->isAlive())
+                        DoCastSpellIfCan(crystal, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
+                }
 
-				m_uiNecroToCampVisualTimer = 15000;
-			}
-			else
-				m_uiNecroToCampVisualTimer -= uiDiff;
+                m_uiNecroToCampVisualTimer = 15000;
+            }
+            else
+                m_uiNecroToCampVisualTimer -= uiDiff;
         }
     }
 
