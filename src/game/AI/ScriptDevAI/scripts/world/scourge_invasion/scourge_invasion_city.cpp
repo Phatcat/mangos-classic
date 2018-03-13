@@ -57,8 +57,13 @@ struct npc_flameshockerAI : public ScriptedAI
     void KilledUnit(Unit* victim) override
     {
         uint32 victimEntry = victim->GetEntry();
-        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
-            m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], victim->GetRandomPoint(*victim, 10), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 300 * IN_MILLISECONDS);
+        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN
+            || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
+        {
+            float fx, fy, fz;
+            m_creature->GetNearPoint(victim, fx, fy, fz, 0, urand(0, 10), 0);
+            m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_TIMED_OR_CORPSE_DESPAWN, 300000);
+        }
     }
 
     void JustDied(Unit* /*killer*/) override
@@ -116,11 +121,11 @@ struct npc_pallid_horrorAI : public npc_escortAI
 
         Reset();
 
-		DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
+        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
 
-        m_creature->DelayFor(1 * IN_MILLISECONDS, [](Creature* c)
+        m_creature->DelayFor(1 * IN_MILLISECONDS, [](Creature* controller)
         {
-            if (npc_pallid_horror::npc_pallid_horrorAI* ai = dynamic_cast<npc_pallid_horror::npc_pallid_horrorAI*>(c->AI()))
+            if (npc_pallid_horrorAI* ai = dynamic_cast<npc_pallid_horrorAI*>(controller->AI()))
                 ai->StartEscort();
         });
     }
@@ -179,8 +184,13 @@ struct npc_pallid_horrorAI : public npc_escortAI
     {
         uint32 victimEntry = victim->GetEntry();
 
-        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
-            m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], victim->GetRandomPoint(*victim, 10), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 300 * IN_MILLISECONDS);
+        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN
+            || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
+        {
+            float fx, fy, fz;
+            m_creature->GetNearPoint(victim, fx, fy, fz, 0, urand(0, 10), 0);
+            m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_TIMED_OR_CORPSE_DESPAWN, 300000);
+        }
     }
 
     void UpdateEscortAI(const uint32 uiDiff) override
@@ -221,7 +231,9 @@ struct npc_pallid_horrorAI : public npc_escortAI
                 }
                 else
                 {
-                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], 0, TEMPSUMMON_DEAD_DESPAWN, 180))
+                    float fx, fy, fz;
+                    m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
+                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
                         cityGuard->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
                 }
 
@@ -336,10 +348,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
         m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[cityAreaPosX]);
 
         if (!m_waypoints)
-        {
-            TC_ERROR("SCOURGE INVASION: Pallid Horror WP cannot be loaded!");
-            return;
-        }
+            script_error_log("SCOURGE INVASION: Pallid Horror WP cannot be loaded!", NPC_PALLID_HORROR);
     }
 
     void SummonFlameshockers(uint8 amount)
@@ -349,10 +358,10 @@ struct npc_pallid_horrorAI : public npc_escortAI
 
         for (uint8 i = 0; i < amount; ++i)
         {
-            Position destination = m_creature->GetRandomPoint(*m_creature, urand(5, 10));
-            destination = m_creature->GetValidPosition(*m_creature, destination);
+            float fx, fy, fz;
+            m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(5, 10), 0);
 
-            m_creature->SummonCreature(NPC_FLAMESHOCKER, destination, TEMPSUMMON_DEAD_DESPAWN, 180);
+            m_creature->SummonCreature(NPC_FLAMESHOCKER, fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 180000);
         }
     }
 };
@@ -377,11 +386,11 @@ struct npc_patchwork_terrorAI : public npc_escortAI
 
         Reset();
 
-		DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
+        DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2);
 
-        m_creature->DelayFor(1000, [](Creature* c)
+        m_creature->DelayFor(1000, [](Creature* controller)
         {
-            if (npc_patchwork_terror::npc_patchwork_terrorAI* ai = dynamic_cast<npc_patchwork_terror::npc_patchwork_terrorAI*>(c->AI()))
+            if (npc_patchwork_terrorAI* ai = dynamic_cast<npc_patchwork_terrorAI*>(controller->AI()))
                 ai->StartEscort();
         });
     }
@@ -408,8 +417,13 @@ struct npc_patchwork_terrorAI : public npc_escortAI
     void KilledUnit(Unit* victim) override
     {
         uint32 victimEntry = victim->GetEntry();
-        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
-            m_creature->SummonCreature(m_zoneToCityEliteGuardId[m_creature->GetZoneId()], victim->GetRandomPoint(*victim, 10), TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 300 * IN_MILLISECONDS);
+        if (victimEntry == NPC_STORMWIND_GUARD || victimEntry == NPC_UNDERCITY_GUARDIAN
+            || victimEntry == NPC_STORMWIND_ROYAL_GUARD || victimEntry == NPC_UNDERCITY_DEATHGUARD_ELITE)
+        {
+            float fx, fy, fz;
+            m_creature->GetNearPoint(victim, fx, fy, fz, 0, urand(0, 10), 0);
+            m_creature->SummonCreature(fx, fy, fz, 0, m_zoneToCityEliteGuardId[m_creature->GetZoneId()], TEMPSPAWN_TIMED_OR_CORPSE_DESPAWN, 300000);
+        }
     }
 
     void UpdateEscortAI(const uint32 uiDiff) override
@@ -441,7 +455,9 @@ struct npc_patchwork_terrorAI : public npc_escortAI
                 }
                 else
                 {
-                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], 0, TEMPSUMMON_DEAD_DESPAWN, 30))
+                    float fx, fy, fz;
+                    m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
+                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
                         cityGuard->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
                 }
 
@@ -487,9 +503,9 @@ struct npc_patchwork_terrorAI : public npc_escortAI
 
         if (m_uiThrowAxeTimer < uiDiff)
         {
-			if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, SPELL_THROW_AXE))
-				if (DoCastSpellIfCan(target, SPELL_THROW_AXE) == CAST_OK)
-					m_uiThrowAxeTimer = urand(18000, 32000);
+            if (Unit* target = m_creature->SelectAttackingTarget(ATTACKING_TARGET_RANDOM, 0, SPELL_THROW_AXE))
+                if (DoCastSpellIfCan(target, SPELL_THROW_AXE) == CAST_OK)
+                    m_uiThrowAxeTimer = urand(18000, 32000);
         }
         else
             m_uiThrowAxeTimer -= uiDiff;
@@ -524,10 +540,10 @@ struct npc_patchwork_terrorAI : public npc_escortAI
 
         for (uint8 i = 0; i < amount; ++i)
         {
-            Position destination = m_creature->GetRandomPoint(*m_creature, urand(5, 10));
-            destination = m_creature->GetValidPosition(*m_creature, destination);
+            float fx, fy, fz;
+            m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(5, 10), 0);
 
-            m_creature->SummonCreature(NPC_FLAMESHOCKER_CLONE, destination, TEMPSUMMON_DEAD_DESPAWN, 180);
+            m_creature->SummonCreature(NPC_FLAMESHOCKER, fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 180000);
         }
     }
 
@@ -542,7 +558,7 @@ struct npc_patchwork_terrorAI : public npc_escortAI
        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[cityAreaPosX]);
 
        if (!m_waypoints)
-           TC_ERROR("SCOURGE INVASION: Patchwork Terror WP cannot be loaded!");
+           script_error_log("SCOURGE INVASION: Patchwork Terror WP cannot be loaded!", NPC_PATCHWORK_TERROR);
    }
 };
 
