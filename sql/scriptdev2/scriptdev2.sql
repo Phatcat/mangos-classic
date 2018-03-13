@@ -436,8 +436,6 @@ INSERT INTO scripted_event_id VALUES
 (5623,'event_spell_gandling_shadow_portal');
 
 /* SCOURGE INVASION */
-UPDATE creature_template SET ScriptName='boss_revanchion' WHERE entry=14690;
-UPDATE creature_template SET ScriptName='boss_lord_blackwood' WHERE entry=14695;
 UPDATE creature_template SET ScriptName='npc_damaged_shard' WHERE entry=16172;
 UPDATE creature_template SET ScriptName='npc_cultist_engineer' WHERE entry=16230;
 UPDATE creature_template SET ScriptName='npc_necropolis' WHERE entry=16401;

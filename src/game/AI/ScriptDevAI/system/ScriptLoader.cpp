@@ -28,8 +28,6 @@ extern void AddSC_spell_scripts();
 extern void AddSC_world_map_scripts();
 extern void AddSC_scourge_invasion();                       // scourge_invasion
 extern void AddSC_scourge_invasion_city();
-extern void AddSC_boss_revanchion();
-extern void AddSC_boss_lord_blackwood();
 
 // eastern kingdoms
 extern void AddSC_blackrock_depths();                       // blackrock_depths
@@ -234,8 +232,6 @@ void AddScripts()
     AddSC_world_map_scripts();
     AddSC_scourge_invasion();                               // scourge_invasion
     AddSC_scourge_invasion_city();
-    AddSC_boss_revanchion();
-    AddSC_boss_lord_blackwood();
 
     // eastern kingdoms
     AddSC_blackrock_depths();                               // blackrock_depths
