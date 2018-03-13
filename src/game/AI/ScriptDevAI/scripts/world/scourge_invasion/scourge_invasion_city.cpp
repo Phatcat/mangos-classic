@@ -222,7 +222,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
                 else
                 {
                     if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], 0, TEMPSUMMON_DEAD_DESPAWN, 180))
-                        cityGuard->MonsterYellToZone(m_cityAreaMarkerPositionToTextId[cityAreaPosX], 0, nullptr);
+                        cityGuard->AI->DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX]);
                 }
 
                 m_invadedCityAreas.push_back(cityAreaPosX);
