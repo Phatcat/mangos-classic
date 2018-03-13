@@ -442,7 +442,7 @@ struct npc_scourge_rewardsAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff) override
     {
-        if (!m_creature->GetVisibility() != VISIBILITY_ON)
+        if (m_creature->GetVisibility() != VISIBILITY_ON)
         {
             if (m_visibilityTimer <= uiDiff)
             {
@@ -692,7 +692,7 @@ struct npc_scourge_minionAI : public ScriptedAI
             }
             case NPC_RARE_BONE_WITCH:
             {
-                SetRangedMovement(5.0f, 30.0f, RANGED_NONE);
+                // SetRangedMovement(5.0f, 30.0f, RANGED_NONE);
                 m_uiArcaneBoltTimer = 3000;
                 m_uiBoneShardsTimer = 15000;
                 break;
@@ -992,7 +992,7 @@ struct npc_necrotic_shardAI : public ScriptedAI
         if (targets.empty())
             return nullptr;
 
-        return Trinity::Containers::SelectRandomContainerElement(targets);
+        return *(targets.begin());;
     }
 
     void SummonCultists()
@@ -1003,11 +1003,11 @@ struct npc_necrotic_shardAI : public ScriptedAI
         {
             currentAngle += 2 * M_PI_F / 4.0f;
 
-            Position destination = m_creature->GetNearPosition(6.9f, currentAngle);
-            destination = m_creature->GetValidPosition(*m_creature, destination);
-            destination.SetOrientation(destination.GetAngle(*m_creature));
-
-            m_creature->SummonCreature(NPC_CULTIST_ENGINEER, destination, TEMPSUMMON_DEAD_DESPAWN, 0, true);
+            float fX, fY, fZ;
+            m_creature->GetNearPoint(m_creature, fX, fY, fZ, 0, 6.9f, currentAngle);
+            
+            if (Creature* cultist = m_creature->SummonCreature(NPC_CULTIST_ENGINEER, fX, fY, fZ, 0, TEMPSPAWN_DEAD_DESPAWN, 60000))
+                cultist->SetFacingToObject(m_creature);
         }
     }
 };
@@ -1130,7 +1130,7 @@ struct npc_necropolis_controllerAI : public ScriptedAI
         if (!m_minionsSpawnQueue.empty())
         {
             MinionToSpawn& minionToSpawn = m_minionsSpawnQueue.back();
-            m_creature->SummonCreature(minionToSpawn.m_entry, minionToSpawn.m_position, TEMPSUMMON_DEAD_DESPAWN, 0, true);
+            m_creature->SummonCreature(minionToSpawn.m_entry, minionToSpawn.m_position.x, minionToSpawn.m_position.y, minionToSpawn.m_position.z, minionToSpawn.m_position.o, TEMPSPAWN_DEAD_DESPAWN, 0, true);
             m_minionsSpawnQueue.pop_back();
         }
 
@@ -1146,8 +1146,10 @@ struct npc_necropolis_controllerAI : public ScriptedAI
                     continue;
                 }
 
-                Position randomRespawnPosition = m_creature->GetRandomPoint(m_creature->GetRespawnPosition(), urand(8, 40));
-                m_creature->SummonCreature(minion->m_entry, randomRespawnPosition, TEMPSUMMON_DEAD_DESPAWN, 0, true);
+                float fX, fY, fZ;
+                m_creature->GetNearPoint(m_creature, fX, fY, fZ, 0, urand(8, 40), 0);
+
+                m_creature->SummonCreature(minion->m_entry, fX, fY, fZ, 0, TEMPSPAWN_DEAD_DESPAWN, 1200000);
                 minion = m_minionsRespawnQueue.erase(minion);
                 break;
             }
@@ -1237,8 +1239,8 @@ struct npc_necropolis_controllerAI : public ScriptedAI
 
     void SummonRareCreature()
     {
-        Position rareMinionSpawnPosition = m_creature->GetRandomPoint(m_creature->GetRespawnPosition(), urand(m_minionsMinSpawnDistance, m_minionsMaxSpawnDistance));
-        rareMinionSpawnPosition = m_creature->GetValidPosition(*m_creature, rareMinionSpawnPosition);
+        float fX, fY, fZ;
+        m_creature->GetNearPoint(m_creature, fX, fY, fZ, 0, urand(8, 40), 0);
 
         uint32 rareMinionType = 0;
 
@@ -1250,7 +1252,7 @@ struct npc_necropolis_controllerAI : public ScriptedAI
         }
 
         if (rareMinionType)
-            m_creature->SummonCreature(rareMinionType, rareMinionSpawnPosition, TEMPSUMMON_DEAD_DESPAWN, 3, true);
+            m_creature->SummonCreature(rareMinionType, fX, fY, fZ, 0, TEMPSPAWN_DEAD_DESPAWN, 120000);
     }
 
     void FillMinionsSpawnQueue(uint32 creatureId, float minRadius = 5, float maxRadius = 5, uint32 amount = 1)
@@ -1258,7 +1260,6 @@ struct npc_necropolis_controllerAI : public ScriptedAI
         float radius = 0;
         float angle = 0;
         float currentAngle = 0;
-        const Position sourcePosition = m_creature->getRespawnCoord();
 
         if (amount != 1)
             angle += 2 * M_PI_F / amount;
@@ -1275,17 +1276,23 @@ struct npc_necropolis_controllerAI : public ScriptedAI
 
             currentAngle += angle;
 
-            Position destination = m_creature->GetNearPosition(radius, currentAngle);
-            destination = m_creature->GetValidPosition(*m_creature, destination);
+            float fX, fY, fZ;
+            m_creature->GetNearPoint(m_creature, fX, fY, fZ, 0, radius, currentAngle);
 
-            MinionToSpawn minionToSpawn(creatureId, destination);
+            Position spawnPosition = Position();
+            spawnPosition.x = fX;
+            spawnPosition.y = fY;
+            spawnPosition.z = fZ;
+
+            MinionToSpawn minionToSpawn(creatureId, spawnPosition);
+           
             m_minionsSpawnQueue.push_back(minionToSpawn);
         }
     }
 
     void SetCampGOsVisibility(bool visible)
     {
-        std::list<GameObject*> undeadFires;
+        /*std::list<GameObject*> undeadFires;
         std::list<GameObject*> undeadFireAuras;
 
         GetGameObjectListWithEntryInGrid(undeadFires, m_creature, GO_UNDEAD_FIRE, 30);
@@ -1307,7 +1314,7 @@ struct npc_necropolis_controllerAI : public ScriptedAI
         {
             fireAura->SetVisibility(visible);
             fireAura->UpdateObjectVisibility();
-        }
+        }*/
     }
 };
 
@@ -1370,7 +1377,7 @@ struct npc_cultist_engineerAI : public ScriptedAI
 
             if (Creature* controller = GetClosestCreatureWithEntry(m_creature, NPC_NECROPOLIS_CONTROLLER, 10.0f))
             {
-                if (npc_necropolis_controller::npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controller::npc_necropolis_controllerAI*>(controller->AI()))
+                if (npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controllerAI*>(controller->AI()))
                 {
                     ai->DespawnCultistEngineers();
                     ai->SpawnNecroticShard();
@@ -1498,7 +1505,7 @@ struct npc_necropolisAI : public ScriptedAI
 
                     for (auto& camp : invasionCamps)
                     {
-                        if (npc_necropolis_controller::npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controller::npc_necropolis_controllerAI*>(camp->AI()))
+                        if (npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controllerAI*>(camp->AI()))
                         {
                             ai->SetCampType(campTypes.back());
                             campTypes.pop_back();
@@ -1577,7 +1584,7 @@ struct npc_necropolisAI : public ScriptedAI
     {
         if (GameObject* necropolis = GetClosestGameObjectWithEntry(m_creature, GO_NECROPOLIS, 100.0f))
         {
-            necropolis->SetVisibility(true);
+            //necropolis->SetVisibility(true);
             necropolis->UpdateObjectVisibility();
             return;
         }
@@ -1588,8 +1595,8 @@ struct npc_necropolisAI : public ScriptedAI
         if (necropolis->LoadFromDB(m_necropolisGoGuid, map))
         {
             map->Add(necropolis);
-            necropolis->SetVisibility(true);
-            necropolis->UpdateObjectVisibility();
+            //necropolis->SetVisibility(true);
+            //necropolis->UpdateObjectVisibility();
         }
         else
             delete necropolis;
@@ -1615,25 +1622,25 @@ struct npc_damaged_shardAI : public ScriptedAI
 
     void Reset() override {}
 
-    void SpellHit(Unit* /*caster*/, const SpellInfo* spell) override
+    void SpellHit(Unit* /*caster*/, const SpellEntry* spell) override
     {
-        if (!m_creature->IsAlive())
+        if (!m_creature->isAlive())
             return;
 
         if (spell->Id == SPELL_NECROPOLIS_TO_CAMPS_VISUAL)
             DoCastSpellIfCan(m_creature, SPELL_COM_CAMP_RECEIVE_VISUAL);
     }
 
-    void JustDied(Unit* /*killer*/, SpellInfo const* /*spellInfo*/) override
+    void JustDied(Unit* /*killer*/) override
     {
         DoCastSpellIfCan(m_creature, SPELL_SOUL_REVIVAL, TRIGGERED_FULL_MASK);
 
         if (Creature* necropolis = GetClosestCreatureWithEntry(m_creature, NPC_NECROPOLIS, 300))
-            if (npc_necropolis::npc_necropolisAI* ai = dynamic_cast<npc_necropolis::npc_necropolisAI*>(necropolis->AI()))
+            if (npc_necropolisAI* ai = dynamic_cast<npc_necropolisAI*>(necropolis->AI()))
                 ai->CampDestroyed();
 
         if (Creature* necropolisController = GetClosestCreatureWithEntry(m_creature, NPC_NECROPOLIS_CONTROLLER, 5))
-            if (npc_necropolis_controller::npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controller::npc_necropolis_controllerAI*>(necropolisController->AI()))
+            if (npc_necropolis_controllerAI* ai = dynamic_cast<npc_necropolis_controllerAI*>(necropolisController->AI()))
                 ai->CampDestroyed();
     }
 };
