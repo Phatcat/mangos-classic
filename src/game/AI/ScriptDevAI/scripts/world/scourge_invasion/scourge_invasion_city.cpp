@@ -144,38 +144,10 @@ struct npc_pallid_horrorAI : public npc_escortAI
         m_uiFearTimer = urand(5000, 12000);
     }
 
-    void EnterEvadeMode() override
-    {
-        if (m_fleeingPhase && !m_creature->HasAura(SPELL_RUNNING_SPEED))
-        {
-            
-            m_creature->SetCombatStartPosition(*m_creature);
-            m_creature->CombatStop();
-            SetCurrentWaypoint(GetCurrentWaypoint() + 1);
-        }
-
-        npc_escortAI::EnterEvadeMode();
-
-        if (m_fleeingPhase && !m_creature->HasAura(SPELL_RUNNING_SPEED))
-        {
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            DoCastSpellIfCan(m_creature, SPELL_INCAPACITATING_SHOUT, TRIGGERED_FULL_MASK);
-            DoCastSpellIfCan(m_creature, SPELL_RUNNING_SPEED, TRIGGERED_FULL_MASK);
-        }
-
-        SetRun(true);
-    }
-
     void JustDied(Unit* /*killer*/) override
     {
         uint32 questCrystalSpellId = m_creature->GetZoneId() == ZONE_STORMWIND ? SPELL_SUMMON_CRACKED_NECROTIC_CRYSTAL : SPELL_SUMMON_FAINT_NECROTIC_CRYSTAL;
         m_creature->AI->DoCastSpellIfCan(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
-    }
-
-    void AuraRemoved(AuraRemoveMode /*mode*/, Unit* /*caster*/, SpellEntry const* spell) override
-    {
-        if (spell->Id == SPELL_RUNNING_SPEED)
-            EndFleeing();
     }
 
 //    Need to see if this can be handled in with their faction.
@@ -254,14 +226,6 @@ struct npc_pallid_horrorAI : public npc_escortAI
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
 
-        if ((m_creature->GetHealthPercent() <= 75 && m_fleeingPhasesCounter == 0) ||
-            (m_creature->GetHealthPercent() <= 50 && m_fleeingPhasesCounter == 1) ||
-            (m_creature->GetHealthPercent() <= 25 && m_fleeingPhasesCounter == 2))
-        {
-            StartFleeing();
-            return;
-        }
-
         // Check if we are casting / channelling, return to not interrupt process and pause CDs
         if (m_creature->IsNonMeleeSpellCasted(false))
             return;
@@ -306,28 +270,6 @@ struct npc_pallid_horrorAI : public npc_escortAI
             return;
 
         DoMeleeAttackIfReady();
-    }
-
-    void StartFleeing()
-    {
-        Reset();
-        ++m_fleeingPhasesCounter;
-
-        if (Creature* cityAreaMarker = GetClosestCreatureWithEntry(m_creature, NPC_CITY_AREA_MARKER, 60))
-            if (int32(cityAreaMarker->GetRespawnPosition().GetPositionX()) == m_stormwindKeepX || int32(cityAreaMarker->GetRespawnPosition().GetPositionX()) == m_royalQuarterX)
-                return;
-
-        m_fleeingPhase = true;
-        EnterEvadeMode();
-    }
-
-    void EndFleeing()
-    {
-        Reset();
-        m_fleeingPhase = false;
-        m_creature->CombatStop();
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        SummonFlameshockers(4);
     }
 
     void StartEscort()
