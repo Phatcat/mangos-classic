@@ -24,7 +24,6 @@ EndScriptData */
 #include "../game/AI/ScriptDevAI/scripts/world/scourge_invasion/scourge_invasion_mgr.h"
 #include "../game/AI/ScriptDevAI/scripts/world/scourge_invasion/scourge_invasion.h"
 #include "../game/AI/ScriptDevAI/PreCompiledHeader.h"
-#include "../game/AI/ScriptDevAI/base/escort_ai.h""
 #include "../game/Grids/GridNotifiers.h"
 #include "../game/Grids/CellImpl.h"
 #include "../game/Grids/GridNotifiersImpl.h"
@@ -98,39 +97,17 @@ struct npc_flameshockerAI : public ScriptedAI
 ######*/
 
 
-struct npc_pallid_horrorAI : public npc_escortAI
+struct npc_pallid_horrorAI : public ScriptedAI
 {
-    uint8 m_fleeingPhasesCounter;
-
-    int32 m_stormwindKeepX = -8439;
-    int32 m_royalQuarterX = 1298;
-    int32 m_swStartingPointX = -8795;
-
-    bool m_fleeingPhase;
-
-    std::list<Escort_Waypoint> const* m_waypoints;
-    std::vector<int32> m_invadedCityAreas;
-
-    npc_pallid_horrorAI(Creature* pCreature) : npc_escortAI(pCreature)
+    npc_pallid_horrorAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         m_uiSpiritAuraTimer = 1000;
-        m_uiCheckInvadedCityAreaTimer = 5000;
-        m_fleeingPhasesCounter = 0;
-
-        m_fleeingPhase = false;
 
         Reset();
 
         DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2, m_creature);
-
-        m_creature->DelayFor(1 * IN_MILLISECONDS, [](Creature* controller)
-        {
-            if (npc_pallid_horrorAI* ai = dynamic_cast<npc_pallid_horrorAI*>(controller->AI()))
-                ai->StartEscort();
-        });
     }
     uint32 m_uiSpiritAuraTimer;
-    uint32 m_uiCheckInvadedCityAreaTimer;
     uint32 m_uiKnockAwayTimer;
     uint32 m_uiStompTimer;
     uint32 m_uiTrampleTimer;
@@ -147,7 +124,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
     void JustDied(Unit* /*killer*/) override
     {
         uint32 questCrystalSpellId = m_creature->GetZoneId() == ZONE_STORMWIND ? SPELL_SUMMON_CRACKED_NECROTIC_CRYSTAL : SPELL_SUMMON_FAINT_NECROTIC_CRYSTAL;
-        m_creature->AI->DoCastSpellIfCan(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
+        m_creature->CastSpell(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
     }
 
 //    Need to see if this can be handled in with their faction.
@@ -166,7 +143,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
         }
     }
 
-    void UpdateEscortAI(const uint32 uiDiff) override
+    void UpdateAI(const uint32 uiDiff) override
     {
         if (m_uiSpiritAuraTimer < uiDiff)
         {
@@ -176,51 +153,6 @@ struct npc_pallid_horrorAI : public npc_escortAI
         }
         else
             m_uiSpiritAuraTimer -= uiDiff;
-
-        if (m_uiCheckInvadedCityAreaTimer < uiDiff)
-        {
-            if (Creature* cityAreaMarker = GetClosestCreatureWithEntry(m_creature, NPC_CITY_AREA_MARKER, 70))
-            {
-                int32 cityAreaPosX = int32(cityAreaMarker->GetRespawnPosition().GetPositionX());
-
-                for (auto currentCityAreaPosX : m_invadedCityAreas)
-                {
-                    if (currentCityAreaPosX == cityAreaPosX)
-                    {
-                        m_uiCheckInvadedCityAreaTimer = 5000;
-                        return;
-                    }
-                }
-
-                if (cityAreaPosX == m_stormwindKeepX)
-                {
-                    if (Creature* bolvar = GetClosestCreatureWithEntry(m_creature, NPC_BOLVAR, 100))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], bolvar);
-                }
-                else if (cityAreaPosX == m_royalQuarterX)
-                {
-                    if (Creature* varimathras = GetClosestCreatureWithEntry(m_creature, NPC_VARIMATHRAS, 100))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], varimathras);
-                }
-                else
-                {
-                    float fx, fy, fz;
-                    m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
-                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], cityGuard);
-                }
-
-                m_invadedCityAreas.push_back(cityAreaPosX);
-
-            }
-
-            m_uiCheckInvadedCityAreaTimer = 5000;
-        }
-        else
-            m_uiCheckInvadedCityAreaTimer -= uiDiff;
-
-        if (m_fleeingPhase || m_creature->HasAura(SPELL_RUNNING_SPEED))
-            return;
 
         // Check if we have a valid target, otherwise do nothing
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
@@ -272,28 +204,6 @@ struct npc_pallid_horrorAI : public npc_escortAI
         DoMeleeAttackIfReady();
     }
 
-    void StartEscort()
-    {
-        SetWaypoints();
-        SummonFlameshockers(8);
-        Start(FLAG_NONE, m_waypoints, true);
-        SetRun(true);
-    }
-
-    void SetWaypoints()
-    {
-        float fCityAreaPosX = m_creature->GetPositionX();
-        std::map<int32, uint32> customWaypointIds = m_creature->GetZoneId() == ZONE_STORMWIND ? m_swPosXToCustomWaypointId : m_ucPosXToCustomWaypointId;
-
-        if (fCityAreaPosX == m_swStartingPointX)
-            fCityAreaPosX = urand(0, 1);
-
-        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[fCityAreaPosX]);
-
-        if (!m_waypoints)
-            script_error_log("SCOURGE INVASION: Pallid Horror WP cannot be loaded!", NPC_PALLID_HORROR);
-    }
-
     void SummonFlameshockers(uint8 amount)
     {
         if (!m_creature->isAlive())
@@ -314,31 +224,15 @@ struct npc_pallid_horrorAI : public npc_escortAI
 ## Entry: 16382
 ######*/
 
-struct npc_patchwork_terrorAI : public npc_escortAI
+struct npc_patchwork_terrorAI : public ScriptedAI
 {
-    int32 m_stormwindKeepX = -8439;
-    int32 m_royalQuarterX = 1298;
-    int32 m_swStartingPointX = -8795;
-
-    std::list<Escort_Waypoint> const* m_waypoints;
-    std::vector<int32> m_invadedCityAreas;
-
     npc_patchwork_terrorAI(Creature* pCreature) : npc_escortAI(pCreature)
     {
-        m_uiCheckInvadedCityAreaTimer = 5000;
-
         Reset();
-
         DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2, m_creature);
+    npc_patchwork_terrorAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
 
-        m_creature->DelayFor(1000, [](Creature* controller)
-        {
-            if (npc_patchwork_terrorAI* ai = dynamic_cast<npc_patchwork_terrorAI*>(controller->AI()))
-                ai->StartEscort();
-        });
     }
-
-    uint32 m_uiCheckInvadedCityAreaTimer;
     uint32 m_uiViciousRendTimer;
     uint32 m_uiEchoingRoarTimer;
     uint32 m_uiCleaveTimer;
@@ -369,49 +263,8 @@ struct npc_patchwork_terrorAI : public npc_escortAI
         }
     }
 
-    void UpdateEscortAI(const uint32 uiDiff) override
+    void UpdateAI(const uint32 uiDiff) override
     {
-        if (m_uiCheckInvadedCityAreaTimer < uiDiff)
-        {
-            if (Creature* cityAreaMarker = GetClosestCreatureWithEntry(m_creature, NPC_CITY_AREA_MARKER, 70))
-            {
-                int32 cityAreaPosX = int32(cityAreaMarker->GetRespawnPosition().GetPositionX());
-
-                for (auto currentCityAreaPosX : m_invadedCityAreas)
-                {
-                    if (currentCityAreaPosX == cityAreaPosX)
-                    {
-                        m_uiCheckInvadedCityAreaTimer =  5000;
-                        return;
-                    }
-                }
-
-                if (cityAreaPosX == m_stormwindKeepX)
-                {
-                    if (Creature* bolvar = GetClosestCreatureWithEntry(m_creature, NPC_BOLVAR, 100))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], bolvar);
-                }
-                else if (cityAreaPosX == m_royalQuarterX)
-                {
-                    if (Creature* varimathras = GetClosestCreatureWithEntry(m_creature, NPC_VARIMATHRAS, 100))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], varimathras);
-                }
-                else
-                {
-                    float fx, fy, fz;
-                    m_creature->GetNearPoint(m_creature, fx, fy, fz, 0, urand(0, 5), 0);
-                    if (Creature* cityGuard = m_creature->SummonCreature(m_zoneToCityGuardId[m_creature->GetZoneId()], fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 30000))
-                        DoScriptText(m_cityAreaMarkerPositionToTextId[cityAreaPosX], cityGuard);
-                }
-
-                m_invadedCityAreas.push_back(cityAreaPosX);
-            }
-
-            m_uiCheckInvadedCityAreaTimer = 5000;
-        }
-        else
-            m_uiCheckInvadedCityAreaTimer -= uiDiff;
-
         // Check if we have a valid target, otherwise do nothing
         if (!m_creature->SelectHostileTarget() || !m_creature->getVictim())
             return;
@@ -468,14 +321,6 @@ struct npc_patchwork_terrorAI : public npc_escortAI
         DoMeleeAttackIfReady();
     }
 
-    void StartEscort()
-    {
-        SetWaypoints();
-        SummonFlameshockers(8);
-        Start(FLAG_NONE, m_waypoints, true);
-        SetRun(true);
-    }
-
    void SummonFlameshockers(uint8 amount)
     {
        if (!m_creature->isAlive())
@@ -488,20 +333,6 @@ struct npc_patchwork_terrorAI : public npc_escortAI
 
             m_creature->SummonCreature(NPC_FLAMESHOCKER, fx, fy, fz, 0, TEMPSPAWN_DEAD_DESPAWN, 180000);
         }
-    }
-
-    void SetWaypoints()
-    {
-        float fCityAreaPosX = m_creature->GetPositionX();
-        std::map<int32, uint32> customWaypointIds = m_creature->GetZoneId() == ZONE_STORMWIND ? m_swPosXToCustomWaypointId : m_ucPosXToCustomWaypointId;
-
-        if (fCityAreaPosX == m_swStartingPointX)
-            fCityAreaPosX = urand(0, 1);
-
-        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[fCityAreaPosX]);
-
-        if (!m_waypoints)
-            script_error_log("SCOURGE INVASION: Patchwork Terror WP cannot be loaded!", NPC_PATCHWORK_TERROR);
     }
 };
 
