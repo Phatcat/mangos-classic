@@ -89,9 +89,9 @@ struct npc_scourge_messengerAI : public ScriptedAI
     {
         for (auto currentMessengerPosX : m_messengersNotAnnouncingPosX)
         {
-            float x = m_creature->GetPositionX;
+            float fx = m_creature->GetPositionX();
 
-            if (currentMessengerPosX == int32(x))
+            if (currentMessengerPosX == int32(fx))
                 return;
         }
 
@@ -510,7 +510,7 @@ struct npc_scourge_rewardsAI : public ScriptedAI
                 return;
         }
 
-        DoCastSpellIfCan(m_creature, spellId, TRIGGERED_FULL_MASK);
+        DoCastSpellIfCan(m_creature, spellId, TRIGGERED_NONE);
     }
 };
 
@@ -611,7 +611,7 @@ static bool GossipSelect_rewards(Player* player, Creature* creature, uint32 /*se
             }
 
             player->PlayerTalkClass->CloseGossip();
-            creature->AI->DoCastSpellIfCan(player, rewardSpell);
+            creature->CastSpell(player, rewardSpell, TRIGGERED_NONE);
             break;
         }
     }
@@ -634,7 +634,7 @@ struct npc_scourge_minionAI : public ScriptedAI
     {
         m_entry = m_creature->GetEntry();
         m_enraged = false;
-        m_creature->CastSpell(m_creature, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_FULL_MASK);
+        m_creature->CastSpell(m_creature, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_NONE);
 
         if (m_entry == NPC_SHADOW_OF_DOOM)
             if (Creature* shard = GetClosestCreatureWithEntry(m_creature, NPC_DAMAGED_NECROTIC_SHARD, 100.0f))
@@ -709,7 +709,7 @@ struct npc_scourge_minionAI : public ScriptedAI
     void JustRespawned() override
     {
         
-        DoCastSpellIfCan(m_creature, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_FULL_MASK);
+        DoCastSpellIfCan(m_creature, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_NONE);
 
         if (m_entry == NPC_SKELETAL_SHOCKTROOPER || m_entry == NPC_RARE_BONE_WITCH)
             DoCastSpellIfCan(m_creature, SPELL_BONE_SHARDS, TRIGGERED_NONE);
@@ -724,7 +724,7 @@ struct npc_scourge_minionAI : public ScriptedAI
             case NPC_SHADOW_OF_DOOM:
             {
                 if (Creature* shard = m_creature->GetMap()->GetCreature(m_damagedShardObjectGuid))
-                    DoCastSpellIfCan(shard, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_FULL_MASK);
+                    DoCastSpellIfCan(shard, SPELL_MINIONS_SPAWN_VISUAL, TRIGGERED_NONE);
 
                 break;
             }
@@ -734,8 +734,8 @@ struct npc_scourge_minionAI : public ScriptedAI
             {
                 if (Creature* necroticShard = GetClosestCreatureWithEntry(m_creature, NPC_NECROTIC_SHARD, 100.0f, true))
                 {
-                    necroticShard->AI->DoCastSpellIfCan(necroticShard, SPELL_DISRUPT_CULTIST_TRANCE_VISUAL, TRIGGERED_FULL_MASK);
-                    necroticShard->AI->DoCastSpellIfCan(necroticShard, SPELL_DAMAGE_CRYSTAL, TRIGGERED_FULL_MASK);
+                    necroticShard->CastSpell(necroticShard, SPELL_DISRUPT_CULTIST_TRANCE_VISUAL, TRIGGERED_NONE);
+                    necroticShard->CastSpell(necroticShard, SPELL_DAMAGE_CRYSTAL, TRIGGERED_NONE);
                 }
                 break;
             }
@@ -744,7 +744,7 @@ struct npc_scourge_minionAI : public ScriptedAI
             case NPC_SPECTRAL_SOLDIER:
             {
                 if (Creature* necroticShard = GetClosestCreatureWithEntry(m_creature, NPC_NECROTIC_SHARD, 100.0f, true))
-                    DoCastSpellIfCan(necroticShard, SPELL_ZAP_CRYSTAL, TRIGGERED_FULL_MASK);
+                    DoCastSpellIfCan(necroticShard, SPELL_ZAP_CRYSTAL, TRIGGERED_NONE);
 
                 break;
             }
@@ -778,7 +778,7 @@ struct npc_scourge_minionAI : public ScriptedAI
             {
                 if (!m_enraged && m_creature->GetHealthPercent() <= 50.0f)
                 {
-                    if (DoCastSpellIfCan(m_creature, SPELL_GHOUL_ENRAGE, TRIGGERED_FULL_MASK) == CAST_OK)
+                    if (DoCastSpellIfCan(m_creature, SPELL_GHOUL_ENRAGE, TRIGGERED_NONE) == CAST_OK)
                         m_enraged = true;
                 }
 
@@ -928,7 +928,7 @@ struct npc_necrotic_shardAI : public ScriptedAI
 
     void JustDied(Unit* /*killer*/) override
     {
-        DoCastSpellIfCan(m_creature, SPELL_SUMMON_CRYSTAL_CORPSE, TRIGGERED_FULL_MASK);
+        DoCastSpellIfCan(m_creature, SPELL_SUMMON_CRYSTAL_CORPSE, TRIGGERED_NONE);
         SummonCultists();
     }
 
@@ -937,7 +937,7 @@ struct npc_necrotic_shardAI : public ScriptedAI
         switch (spell->Id)
         {
             case SPELL_NECROPOLIS_TO_CAMPS_VISUAL:
-                DoCastSpellIfCan(m_creature, SPELL_COM_CAMP_RECEIVE_VISUAL, TRIGGERED_FULL_MASK);
+                DoCastSpellIfCan(m_creature, SPELL_COM_CAMP_RECEIVE_VISUAL, TRIGGERED_NONE);
                 break;
         }
     }
@@ -947,7 +947,7 @@ struct npc_necrotic_shardAI : public ScriptedAI
         if (m_uiCampToNecroVisualTimer < uiDiff)
         {
             if (Creature* target = GetClosestCreatureWithEntry(m_creature, NPC_NECROPOLIS, 300))
-                if (DoCastSpellIfCan(target, SPELL_CAMP_TO_NECROPOLIS_VISUAL, TRIGGERED_FULL_MASK) == CAST_OK)
+                if (DoCastSpellIfCan(target, SPELL_CAMP_TO_NECROPOLIS_VISUAL, TRIGGERED_NONE) == CAST_OK)
                     m_uiCampToNecroVisualTimer = 35000;
         }
         else
@@ -956,7 +956,7 @@ struct npc_necrotic_shardAI : public ScriptedAI
         if (m_uiScourgeStrikeTimer < uiDiff)
         {
             if (Unit* target = SelectScourgeStrikeTarget())
-                if (DoCastSpellIfCan(target, SPELL_SCOURGE_STRIKE, TRIGGERED_FULL_MASK) == CAST_OK)
+                if (DoCastSpellIfCan(target, SPELL_SCOURGE_STRIKE, TRIGGERED_NONE) == CAST_OK)
                     m_uiScourgeStrikeTimer = 7000;
         }
         else
@@ -1166,7 +1166,7 @@ struct npc_necropolis_controllerAI : public ScriptedAI
     void SpawnNecroticShard()
     {
         if (!GetClosestCreatureWithEntry(m_creature, NPC_DAMAGED_NECROTIC_SHARD, 10.0f))
-            DoCastSpellIfCan(m_creature, SPELL_CREATE_CRYSTAL, TRIGGERED_FULL_MASK);
+            DoCastSpellIfCan(m_creature, SPELL_CREATE_CRYSTAL, TRIGGERED_NONE);
     }
 
     void SetMinionsTypes()
@@ -1326,7 +1326,7 @@ struct npc_cultist_engineerAI : public ScriptedAI
 {
     npc_cultist_engineerAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
-        DoCastSpellIfCan(m_creature, SPELL_CULTIST_ENGINEER_SPAWN_VISUAL, TRIGGERED_FULL_MASK);
+        DoCastSpellIfCan(m_creature, SPELL_CULTIST_ENGINEER_SPAWN_VISUAL, TRIGGERED_NONE);
 
         Reset();
     }
@@ -1349,7 +1349,7 @@ struct npc_cultist_engineerAI : public ScriptedAI
     {
         if (m_uiButtressChannelTimer < uiDiff)
         {
-            if (DoCastSpellIfCan(GetClosestCreatureWithEntry(m_creature, NPC_DAMAGED_NECROTIC_SHARD, 20.0f, true), SPELL_BUTTRESS_CHANNEL, TRIGGERED_FULL_MASK) == CAST_OK)
+            if (DoCastSpellIfCan(GetClosestCreatureWithEntry(m_creature, NPC_DAMAGED_NECROTIC_SHARD, 20.0f, true), SPELL_BUTTRESS_CHANNEL, TRIGGERED_NONE) == CAST_OK)
                 m_uiButtressChannelTimer = 3000;
         }
         else
@@ -1392,7 +1392,7 @@ struct npc_cultist_engineerAI : public ScriptedAI
     void SummonBoss(Player const* player)
     {
         m_playerGuid = player->GetObjectGuid();
-        if (m_creature->AI->DoCastSpellifCan(m_creature, SPELL_DISRUPT_CULTIST_TRANCE_VISUAL, TRIGGERED_FULL_MASK) == CAST_OK)
+        if (m_creature->CastSpell(m_creature, SPELL_DISRUPT_CULTIST_TRANCE_VISUAL, TRIGGERED_NONE) == CAST_OK)
         {
             m_bDoSummonShadow = true;
             m_uiShadowOfDoomTimer = 2000;
@@ -1510,7 +1510,7 @@ struct npc_necropolisAI : public ScriptedAI
                             campTypes.pop_back();
                         }
 
-                        DoCastSpellIfCan(camp, SPELL_ACTIVATE_CAMP_VISUAL, TRIGGERED_FULL_MASK);
+                        DoCastSpellIfCan(camp, SPELL_ACTIVATE_CAMP_VISUAL, TRIGGERED_NONE);
                     }
 
                     m_bDoNecroToCamp = true;
@@ -1533,13 +1533,13 @@ struct npc_necropolisAI : public ScriptedAI
                 for (auto& shard : necroticShards)
                 {
                     if (shard->isAlive())
-                        DoCastSpellIfCan(shard, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
+                        DoCastSpellIfCan(shard, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_NONE);
                 }
 
                 for (auto& crystal : damagedCrystals)
                 {
                     if (crystal->isAlive())
-                        DoCastSpellIfCan(crystal, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_FULL_MASK);
+                        DoCastSpellIfCan(crystal, SPELL_NECROPOLIS_TO_CAMPS_VISUAL, TRIGGERED_NONE);
                 }
 
                 m_uiNecroToCampVisualTimer = 15000;
@@ -1632,7 +1632,7 @@ struct npc_damaged_shardAI : public ScriptedAI
 
     void JustDied(Unit* /*killer*/) override
     {
-        DoCastSpellIfCan(m_creature, SPELL_SOUL_REVIVAL, TRIGGERED_FULL_MASK);
+        DoCastSpellIfCan(m_creature, SPELL_SOUL_REVIVAL, TRIGGERED_NONE);
 
         if (Creature* necropolis = GetClosestCreatureWithEntry(m_creature, NPC_NECROPOLIS, 300))
             if (npc_necropolisAI* ai = dynamic_cast<npc_necropolisAI*>(necropolis->AI()))
