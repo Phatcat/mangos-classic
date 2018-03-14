@@ -148,8 +148,9 @@ struct npc_pallid_horrorAI : public npc_escortAI
     {
         if (m_fleeingPhase && !m_creature->HasAura(SPELL_RUNNING_SPEED))
         {
+            
             m_creature->SetCombatStartPosition(*m_creature);
-            m_creature->DisableAttacking(true);
+            m_creature->CombatStop();
             SetCurrentWaypoint(GetCurrentWaypoint() + 1);
         }
 
@@ -171,7 +172,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
         m_creature->AI->DoCastSpellIfCan(m_creature, questCrystalSpellId, TRIGGERED_FULL_MASK);
     }
 
-    void SpellAuraRemoved(AuraRemoveMode /*mode*/, Unit* /*caster*/, SpellEntry const* spell) override
+    void AuraRemoved(AuraRemoveMode /*mode*/, Unit* /*caster*/, SpellEntry const* spell) override
     {
         if (spell->Id == SPELL_RUNNING_SPEED)
             EndFleeing();
@@ -324,7 +325,7 @@ struct npc_pallid_horrorAI : public npc_escortAI
     {
         Reset();
         m_fleeingPhase = false;
-        m_creature->DisableAttacking(false);
+        m_creature->CombatStop();
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         SummonFlameshockers(4);
     }
@@ -339,13 +340,13 @@ struct npc_pallid_horrorAI : public npc_escortAI
 
     void SetWaypoints()
     {
-        int32 cityAreaPosX = int32(m_creature->GetRespawnPosition().GetPositionX());
+        float fCityAreaPosX = m_creature->GetPositionX();
         std::map<int32, uint32> customWaypointIds = m_creature->GetZoneId() == ZONE_STORMWIND ? m_swPosXToCustomWaypointId : m_ucPosXToCustomWaypointId;
 
-        if (cityAreaPosX == m_swStartingPointX)
-            cityAreaPosX = urand(0, 1);
+        if (fCityAreaPosX == m_swStartingPointX)
+            fCityAreaPosX = urand(0, 1);
 
-        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[cityAreaPosX]);
+        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[fCityAreaPosX]);
 
         if (!m_waypoints)
             script_error_log("SCOURGE INVASION: Pallid Horror WP cannot be loaded!", NPC_PALLID_HORROR);
@@ -547,19 +548,19 @@ struct npc_patchwork_terrorAI : public npc_escortAI
         }
     }
 
-   void SetWaypoints()
-   {
-       int32 cityAreaPosX = int32(m_creature->GetRespawnPosition().GetPositionX());
-       std::map<int32, uint32> customWaypointIds = m_creature->GetZoneId() == ZONE_STORMWIND ? m_swPosXToCustomWaypointId : m_ucPosXToCustomWaypointId;
+    void SetWaypoints()
+    {
+        float fCityAreaPosX = m_creature->GetPositionX();
+        std::map<int32, uint32> customWaypointIds = m_creature->GetZoneId() == ZONE_STORMWIND ? m_swPosXToCustomWaypointId : m_ucPosXToCustomWaypointId;
 
-       if (cityAreaPosX == m_swStartingPointX)
-           cityAreaPosX = urand(0, 1);
+        if (fCityAreaPosX == m_swStartingPointX)
+            fCityAreaPosX = urand(0, 1);
 
-       m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[cityAreaPosX]);
+        m_waypoints = sScriptMgr.GetCustomWaypoints(customWaypointIds[fCityAreaPosX]);
 
-       if (!m_waypoints)
-           script_error_log("SCOURGE INVASION: Patchwork Terror WP cannot be loaded!", NPC_PATCHWORK_TERROR);
-   }
+        if (!m_waypoints)
+            script_error_log("SCOURGE INVASION: Patchwork Terror WP cannot be loaded!", NPC_PATCHWORK_TERROR);
+    }
 };
 
 CreatureAI* GetAI_npc_flameshocker(Creature* pCreature)

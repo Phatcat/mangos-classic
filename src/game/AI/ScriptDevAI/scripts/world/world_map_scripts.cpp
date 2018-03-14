@@ -87,7 +87,7 @@ struct world_map_eastern_kingdoms : public ScriptedMap
                     return;
                 }
             case GO_NECROPOLIS:
-                pGo->SetVisibility(false);
+                /*pGo->SetVisibility(false);*/
                 pGo->UpdateObjectVisibility();
                 break;
         }
@@ -244,7 +244,7 @@ struct world_map_kalimdor : public ScriptedMap
                     return;
                 }
             case GO_NECROPOLIS:
-                pGo->SetVisibility(false);
+                /*pGo->SetVisibility(false);*/
                 pGo->UpdateObjectVisibility();
                 break;
             case GO_GHOST_MAGNET:

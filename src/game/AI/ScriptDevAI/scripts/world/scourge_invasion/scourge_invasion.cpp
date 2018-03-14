@@ -89,8 +89,7 @@ struct npc_scourge_messengerAI : public ScriptedAI
     {
         for (auto currentMessengerPosX : m_messengersNotAnnouncingPosX)
         {
-            float x, y, z;
-            m_creature->GetRespawnCoord(x, y, z);
+            float x = m_creature->GetPositionX;
 
             if (currentMessengerPosX == int32(x))
                 return;
@@ -110,26 +109,26 @@ static bool GossipSelect_messenger(Player* player, Creature* creature, uint32 /*
 {
     switch (action)
     {
-    case GOSSIP_ACTION_INFO_DEF + 1:
-    case GOSSIP_ACTION_INFO_DEF + 2:
-    case GOSSIP_ACTION_INFO_DEF + 3:
-    case GOSSIP_ACTION_INFO_DEF + 4:
-    case GOSSIP_ACTION_INFO_DEF + 5:
-    case GOSSIP_ACTION_INFO_DEF + 6:
-    {
-        SendGossipInvadedZones_messenger(player, creature, action - GOSSIP_ACTION_INFO_DEF);
-        break;
-    }
-    case GOSSIP_ACTION_INFO_DEF + 7:
-    {
-        SendGossipBattlesWon_messenger(player, creature);
-        break;
-    }
-    case GOSSIP_ACTION_INFO_DEF + 8:
-    {
-        SendGossipOnBackAction_messenger(player, creature);
-        break;
-    }
+        case GOSSIP_ACTION_INFO_DEF + 1:
+        case GOSSIP_ACTION_INFO_DEF + 2:
+        case GOSSIP_ACTION_INFO_DEF + 3:
+        case GOSSIP_ACTION_INFO_DEF + 4:
+        case GOSSIP_ACTION_INFO_DEF + 5:
+        case GOSSIP_ACTION_INFO_DEF + 6:
+        {
+            SendGossipInvadedZones_messenger(player, creature, action - GOSSIP_ACTION_INFO_DEF);
+            break;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 7:
+        {
+            SendGossipBattlesWon_messenger(player, creature);
+            break;
+        }
+        case GOSSIP_ACTION_INFO_DEF + 8:
+        {
+            SendGossipOnBackAction_messenger(player, creature);
+            break;
+        }
     }
 
     return true;
