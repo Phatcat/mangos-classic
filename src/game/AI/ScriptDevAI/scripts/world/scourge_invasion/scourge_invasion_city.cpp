@@ -226,12 +226,10 @@ struct npc_pallid_horrorAI : public ScriptedAI
 
 struct npc_patchwork_terrorAI : public ScriptedAI
 {
-    npc_patchwork_terrorAI(Creature* pCreature) : npc_escortAI(pCreature)
+    npc_patchwork_terrorAI(Creature* pCreature) : ScriptedAI(pCreature)
     {
         Reset();
         DoScriptText(urand(0, 1) ? CITY_INVADER_SPAWN_YELL_1 : CITY_INVADER_SPAWN_YELL_2, m_creature);
-    npc_patchwork_terrorAI(Creature* pCreature) : ScriptedAI(pCreature) { Reset(); }
-
     }
     uint32 m_uiViciousRendTimer;
     uint32 m_uiEchoingRoarTimer;
