@@ -547,6 +547,31 @@ void Spell::EffectDummy(SpellEffectIndex eff_idx)
 
                     return;
                 }
+                case 13278:                                 // Gnomish Death Ray (Init)
+                {
+                    if (m_CastItem)
+                        m_caster->CastSpell(unitTarget, 13493, true, m_CastItem);
+
+                    return;
+                }
+                case 13280:                                 // Gnomish Death Ray - perform the neccessary damage calculations and do the damage.
+                {
+                    //unitTarget = dynamic_cast<CumulativeEffectAura*>(m_caster->GetAura(13278, EFFECT_INDEX_0))->GetTriggerTarget();
+                    //SpellAuraHolder* holder = m_caster->GetSpellAuraHolder(1327, EFFECT_INDEX_0);
+                    //float cumulativeEffect = dynamic_cast<CumulativeEffectAura*>(m_caster->GetAura(13278, EFFECT_INDEX_0))->GetCumulativeEffect();
+
+                    int32 damageMod = 800 /*+ (uint32)(cumulativeEffect * 0.85)*/;  // Do 800 + 85 % of the accumulated damage in final damage.
+
+                    if (urand(1, 100) <= 20)                  // A 20 % chance to do more damage.
+                        damageMod = (int32)((float)damageMod * 1.50f);
+
+                    if (urand(1, 100) > 18)                  // A 72 % successrate.
+                        m_caster->CastCustomSpell(unitTarget, 13279, &damageMod, nullptr, nullptr, TRIGGERED_OLD_TRIGGERED, nullptr);  // Cast succeeded.
+                    else
+                        m_caster->CastCustomSpell(m_caster, 13279, &damageMod, nullptr, nullptr, TRIGGERED_OLD_TRIGGERED, nullptr);    // Backfire!
+
+                    return;
+                }
                 case 13489:
                 {
                     if (unitTarget)

@@ -2952,6 +2952,11 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool /*Real*/)
     {
         switch (GetId())
         {
+            case 13278:                                     // Death Ray
+                if (m_removeMode == AURA_REMOVE_BY_CANCEL)
+                    // Remove Aura 13493 on 13278 removal
+                    target->RemoveAurasByCasterSpell(13493, GetCasterGuid());
+                return;
             case 18173:                                     // Burning Adrenaline (Main Target version)
             case 23620:                                     // Burning Adrenaline (Caster version)
                 // On aura removal, the target deals AoE damage to friendlies and kills himself/herself (prevent durability loss)
